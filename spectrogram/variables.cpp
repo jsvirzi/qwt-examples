@@ -33,11 +33,44 @@ double JsvHistogram::image_entropy(uint8_t *b, int width, int height) {
     return logr;
 }
 
+void JsvHistogram::image_occupancy_states(uint8_t *b, int width, int height) {
+    if (h_occupancy == NULL) { delete h_occupancy; }
+    double occupancy[256], occupancy_integral[256], integral;
+
+    h_occupancy = new TH1I("occupancy", "occupancy", 256, 0, 256);
+    for (int row = 0; row < height; ++row) {
+        uint8_t *p = &b[row * width];
+        for (int col = 0; col < width; ++col) {
+            uint8_t occ = *p++;
+            h_occupancy->Fill(occ);
+        }
+    }
+
+    if (g_occupancy == NULL) { delete g_occupancy; }
+    g_occupancy = new TGraphErrors(max_occupancy, occ_axis, occupancy);
+    for (unsigned int i = 0, integral = 0.0; i < 256; ++i) {
+        unsigned int bin = i + 1;
+        occupancy[i] = h_occupancy->GetBinContent(bin);
+        occupancy_integral[i] = integral + occupancy[i];
+    }
+}
+
 JsvHistogram::JsvHistogram(double x_min, double x_max, double y_min, double y_max, unsigned int history) {
+
+    int i = 0;
+
+    h_occupancy = NULL;
+    g_occupancy = NULL;
+    g_occupancy_integral = NULL;
+    max_occupancy = 256;
+
+    for (i = 0; i < 256; ++i) {
+        occ_axis[i] = (double) i;
+    }
 
     const double c = 0.5 * log(2.0 * M_PI);
 
-    int i = 0;
+    i = 0;
     log_factorial_lut[i++] = log(1.0);
     log_factorial_lut[i++] = log(2 * 1.0);
     log_factorial_lut[i++] = log(3 * 2 * 1.0);
@@ -62,11 +95,11 @@ JsvHistogram::JsvHistogram(double x_min, double x_max, double y_min, double y_ma
     char **argv = &arg1; // = { "this_main_app" };
     theApp = new TApplication("theApp", &argc, argv);
     canvas = new TCanvas("canvas", "canvas", 800, 600);
-    hist = new TH1I("hist", "this", 10, 0, 10);
-    hist->Fill(5.0);
-    hist->Fill(4.2);
-    hist->Fill(8.2);
-    hist->Draw("HIST");
+//    hist = new TH1I("hist", "this", 10, 0, 10);
+//    hist->Fill(5.0);
+//    hist->Fill(4.2);
+//    hist->Fill(8.2);
+//    hist->Draw("HIST");
     canvas->Draw();
     canvas->Update();
 
@@ -85,7 +118,9 @@ JsvHistogram::JsvHistogram(double x_min, double x_max, double y_min, double y_ma
 JsvHistogram::~JsvHistogram() {
     if (entropy != NULL) { delete [] entropy; entropy = NULL; }
     if (canvas != NULL) { delete canvas; canvas = NULL; }
-    if (hist != NULL) { delete hist; hist = NULL; }
+    if (h_occupancy != NULL) { delete h_occupancy; h_occupancy = NULL; }
+    if (g_occupancy != NULL) { delete g_occupancy; g_occupancy = NULL; }
+    if (g_occupancy_integral != NULL) { delete g_occupancy_integral; g_occupancy_integral = NULL; }
 }
 
 void JsvHistogram::updateDataPhase(double entropy_value) {
