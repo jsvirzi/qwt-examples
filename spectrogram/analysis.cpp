@@ -12,7 +12,7 @@
 
 #include "analysis.h"
 
-static const unsigned int max_history_size = 2048;
+static const unsigned int max_history_size = 32768;
 static double log_factorial_lut[256];
 
 double Analysis::image_entropy(void) {
@@ -46,14 +46,15 @@ double Analysis::image_entropy(void) {
 
 void Analysis::image_occupancy_states(void)
 {
-    return;
-
     uint8_t *b = gray_mat.data;
     image_width = gray_mat.cols;
     image_height = gray_mat.rows;
     unsigned int rows = image_height;
     unsigned int cols = image_width;
-    if (h_occupancy == NULL) { delete h_occupancy; }
+    if (h_occupancy != NULL) { delete h_occupancy; }
+    if (g_occupancy != NULL) { delete g_occupancy; }
+    if (g_occupancy_integral != NULL) { delete g_occupancy_integral; }
+
     double occupancy[256], occupancy_integral[256], integral = 0.0;
 
     h_occupancy = new TH1I("occupancy", "occupancy", 256, 0, 256);
@@ -73,13 +74,15 @@ void Analysis::image_occupancy_states(void)
         occupancy_integral[i] = integral + occupancy[i];
     }
 
+#if 1
     canvas->cd();
     h_occupancy->Draw("hist");
-    g_occupancy->Draw("L");
-    g_occupancy_integral->Draw("L");
+//    g_occupancy->Draw("L");
+//    g_occupancy_integral->Draw("L");
     canvas->Draw();
     canvas->Update();
-    canvas->WaitPrimitive();
+//    canvas->WaitPrimitive();
+#endif
 }
 
 bool Analysis::next_image() {
@@ -89,6 +92,8 @@ bool Analysis::next_image() {
         image_health = false;
         return image_health;
     }
+
+    ++frame_index;
 
     if (first_frame) {
         printf("C: rows = %d. cols = %d. channels = %d\n", frame_mat.rows, frame_mat.cols, frame_mat.channels());
@@ -110,7 +115,7 @@ Analysis::Analysis(const char *filename) {
 
     int i = 0;
 
-    int frame_index = 0;
+    frame_index = 0;
     printf("opened video\n");
     video_capture = cv::VideoCapture(filename);
     image_health = video_capture.isOpened();
@@ -149,7 +154,7 @@ Analysis::Analysis(const char *filename) {
     char *arg1 = "this_main_app";
     char **argv = &arg1; // = { "this_main_app" };
     theApp = new TApplication("theApp", &argc, argv);
-    canvas = new TCanvas("canvas", "canvas", 800, 600);
+    canvas = new TCanvas("canvas", "canvas", 1600, 1200);
 
     entropy = new double[max_history_size];
     data_phase = 0;

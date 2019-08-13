@@ -40,6 +40,7 @@ public:
     int first_frame;
     bool video_run_flag;
     unsigned int image_height, image_width;
+    unsigned int frame_index;
 };
 
 #endif

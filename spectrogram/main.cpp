@@ -95,17 +95,24 @@ int main( int argc, char **argv )
     int fd = open("//Users/jsvirzi/Downloads/600_1280x720.nv21", O_RDONLY, S_IREAD);
     size_t n_bytes = read(fd, image_buff, sizeof(image_buff));
 
-    // Analysis analysis("/home/jsvirzi/projects/0_1565280852557.mp4");
-    Analysis analysis("/home/jsvirzi/projects/0_1565248884144.mp4");
+    Analysis analysis("/home/jsvirzi/projects/0_1565280852557.mp4");
+    // Analysis analysis("/home/jsvirzi/projects/0_1565248884144.mp4");
 
+    double S0 = 0.0;
     while (analysis.next_image())
     {
-        analysis.image_entropy();
+        double S = analysis.image_entropy();
+        analysis.image_occupancy_states();
+        if (analysis.frame_index < 10) { S0 += 0.1 * S; }
+        else { printf("ratio = %lf\n", S / S0); }
+
+        // analysis.updateData(S);
         // analysis.image_occupancy_states();
     }
 
     analysis.stop_image();
 
+#if 0
     JsvHistogram jsvHistogram(0.0, 1.0, 0.0, 1.0, (unsigned int) 0);
 
     double logr = jsvHistogram.image_entropy(image_buff, 1280, 720);
@@ -120,4 +127,6 @@ int main( int argc, char **argv )
     mainWindow.show();
 
     return a.exec();
+#endif
+
 }
