@@ -17,8 +17,8 @@ class Analysis {
 public:
     Analysis(const char *filename);
     ~Analysis();
-    double image_entropy(uint8_t *b, int width, int height);
-    void image_occupancy_states(uint8_t *b, int width, int height);
+    double image_entropy(void);
+    void image_occupancy_states(void);
     bool next_image();
     bool stop_image();
     bool image_health;
@@ -39,6 +39,7 @@ public:
     cv::Mat gray_mat;
     int first_frame;
     bool video_run_flag;
+    unsigned int image_height, image_width;
 };
 
 #endif

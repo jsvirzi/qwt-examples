@@ -95,9 +95,14 @@ int main( int argc, char **argv )
     int fd = open("//Users/jsvirzi/Downloads/600_1280x720.nv21", O_RDONLY, S_IREAD);
     size_t n_bytes = read(fd, image_buff, sizeof(image_buff));
 
-    Analysis analysis("/home/jsvirzi/projects/0_1565280852557.mp4");
+    // Analysis analysis("/home/jsvirzi/projects/0_1565280852557.mp4");
+    Analysis analysis("/home/jsvirzi/projects/0_1565248884144.mp4");
 
-    while (analysis.next_image()) { ; }
+    while (analysis.next_image())
+    {
+        analysis.image_entropy();
+        // analysis.image_occupancy_states();
+    }
 
     analysis.stop_image();
 

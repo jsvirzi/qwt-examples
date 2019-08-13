@@ -15,13 +15,18 @@
 static const unsigned int max_history_size = 2048;
 static double log_factorial_lut[256];
 
-double Analysis::image_entropy(uint8_t *b, int width, int height) {
+double Analysis::image_entropy(void) {
+    uint8_t *b = gray_mat.data;
+    image_width = gray_mat.cols;
+    image_height = gray_mat.rows;
+    unsigned int rows = image_height;
+    unsigned int cols = image_width;
     uint32_t total_occ = 0;
-    uint32_t N = width * height;
+    uint32_t N = cols * rows;
     double log_entropy = 0.0;
-    for (int row = 0; row < height; ++row) {
-        uint8_t *p = &b[row * width];
-        for (int col = 0; col < width; ++col) {
+    for (int row = 0; row < rows; ++row) {
+        uint8_t *p = &b[row * cols];
+        for (int col = 0; col < cols; ++col) {
             uint8_t byte = *p++;
             total_occ += byte;
             log_entropy += log_factorial_lut[byte];
@@ -30,22 +35,31 @@ double Analysis::image_entropy(uint8_t *b, int width, int height) {
     unsigned int mean_occupancy = floor(total_occ / N);
     printf("mean occupancy = %d\n", mean_occupancy);
     if (mean_occupancy >= 256) {
-        printf("mean occupancy = %d\n", mean_occupancy);
+        printf("*** mean occupancy = %d\n", mean_occupancy);
         mean_occupancy &= 0xff;
     }
-    double mean_entropy = N * log_factorial_lut[mean_occupancy];
-    double logr = mean_entropy - log_entropy;
+    double log_mean_entropy = N * log_factorial_lut[mean_occupancy];
+    double logr = log_mean_entropy - log_entropy;
+    printf("log(entropy) = %lf = %lf - %lf\n", logr, log_entropy, log_mean_entropy);
     return logr;
 }
 
-void Analysis::image_occupancy_states(uint8_t *b, int width, int height) {
+void Analysis::image_occupancy_states(void)
+{
+    return;
+
+    uint8_t *b = gray_mat.data;
+    image_width = gray_mat.cols;
+    image_height = gray_mat.rows;
+    unsigned int rows = image_height;
+    unsigned int cols = image_width;
     if (h_occupancy == NULL) { delete h_occupancy; }
     double occupancy[256], occupancy_integral[256], integral = 0.0;
 
     h_occupancy = new TH1I("occupancy", "occupancy", 256, 0, 256);
-    for (int row = 0; row < height; ++row) {
-        uint8_t *p = &b[row * width];
-        for (int col = 0; col < width; ++col) {
+    for (int row = 0; row < rows; ++row) {
+        uint8_t *p = &b[row * cols];
+        for (int col = 0; col < cols; ++col) {
             uint8_t occ = *p++;
             h_occupancy->Fill(occ);
         }
@@ -58,19 +72,28 @@ void Analysis::image_occupancy_states(uint8_t *b, int width, int height) {
         occupancy[i] = h_occupancy->GetBinContent(bin);
         occupancy_integral[i] = integral + occupancy[i];
     }
+
+    canvas->cd();
+    h_occupancy->Draw("hist");
+    g_occupancy->Draw("L");
+    g_occupancy_integral->Draw("L");
+    canvas->Draw();
+    canvas->Update();
+    canvas->WaitPrimitive();
 }
 
 bool Analysis::next_image() {
-    if (first_frame) {
-        printf("C: rows = %d. cols = %d. channels = %d. size = %d\n", frame_mat.rows, frame_mat.cols, frame_mat.channels());
-        printf("G: rows = %d. cols = %d. channels = %d. size = %d\n", gray_mat.rows, gray_mat.cols, gray_mat.channels());
-        first_frame = 0;
-    }
     video_capture >> frame_mat;
     cvtColor(frame_mat, gray_mat, cv::COLOR_RGB2GRAY);
     if (frame_mat.empty()) {
         image_health = false;
         return image_health;
+    }
+
+    if (first_frame) {
+        printf("C: rows = %d. cols = %d. channels = %d\n", frame_mat.rows, frame_mat.cols, frame_mat.channels());
+        printf("G: rows = %d. cols = %d. channels = %d\n", gray_mat.rows, gray_mat.cols, gray_mat.channels());
+        first_frame = 0;
     }
 
     imshow("gray", gray_mat);
@@ -101,9 +124,7 @@ Analysis::Analysis(const char *filename) {
     g_occupancy_integral = NULL;
     max_occupancy = 256;
 
-    for (i = 0; i < 256; ++i) {
-        occ_axis[i] = (double) i;
-    }
+    for (i = 0; i < 256; ++i) { occ_axis[i] = (double) i; }
 
     const double c = 0.5 * log(2.0 * M_PI);
 
@@ -137,8 +158,6 @@ Analysis::Analysis(const char *filename) {
 
     first_frame = 1;
 }
-
-
 
 Analysis::~Analysis() {
     if (entropy != NULL) { delete [] entropy; entropy = NULL; }
