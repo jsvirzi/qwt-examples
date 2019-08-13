@@ -73,17 +73,27 @@ JsvHistogram::JsvHistogram(double x_min, double x_max, double y_min, double y_ma
         return;
     }
 
-    while (1) {
+    int first = 1;
+    while (video_capture.isOpened()) {
         cv::Mat frame;
         printf("capture frame %d\n", frame_index++);
         video_capture >> frame;
+        if (first) {
+            printf("rows = %d. cols = %d. channels = %d. size = %d\n", frame.rows, frame.cols, frame.channels());
+            first = 0;
+        }
+        cv::Mat gray_frame;
+        cvtColor(frame, gray_frame, cv::COLOR_RGB2GRAY);
         if (frame.empty()) { printf("we're done\n"); break; }
-        imshow("Frame", frame);
+        // imshow("Frame", frame);
+        imshow("gray", gray_frame);
         char ch = (char) cv::waitKey(10);
         if (ch == 0x1b) { break; }
     }
 
     video_capture.release();
+
+    return;
 
     h_occupancy = NULL;
     g_occupancy = NULL;
