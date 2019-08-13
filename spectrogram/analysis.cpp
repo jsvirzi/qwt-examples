@@ -3,6 +3,7 @@
 #include <TApplication.h>
 #include <TH1I.h>
 #include <TCanvas.h>
+#include <TLatex.h>
 
 #include <math.h>
 
@@ -44,7 +45,7 @@ double Analysis::image_entropy(void) {
     return logr;
 }
 
-void Analysis::image_occupancy_states(void)
+void Analysis::image_occupancy_states(double ratio)
 {
     unsigned int i;
     uint8_t *b = gray_mat.data;
@@ -74,21 +75,24 @@ void Analysis::image_occupancy_states(void)
     }
     occupancy[i] = 0.0;
     occupancy_integral[i] = integral + occupancy[i];
+
+    double x = ratio * 128;
+    double y_min = 0.0, y_max = occupancy_integral[255] / 32.0;
+    TLine *line = new TLine(x, y_min, x, y_max);
+    line->SetLineColor(38);
+    line->SetLineWidth(4);
+
 //    g_occupancy->SetPoint(i, occ_axis[i], occupancy[i]);
 //    g_occupancy_integral->SetPoint(i, occ_axis[i], occupancy_integral[i]);
 
-//    printf("zippedee-doo-dah\n");
-//    printf("hickedee-doo-dah\n");
-
-#if 1
     canvas->cd();
     h_occupancy->Draw("hist");
     g_occupancy->Draw("L");
     g_occupancy_integral->Draw("L");
+    line->Draw();
     canvas->Draw();
     canvas->Update();
 //    canvas->WaitPrimitive();
-#endif
 }
 
 bool Analysis::next_image() {

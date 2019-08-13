@@ -102,7 +102,8 @@ int main( int argc, char **argv )
     while (analysis.next_image())
     {
         double S = analysis.image_entropy();
-        analysis.image_occupancy_states();
+        double ratio = S / S0;
+        analysis.image_occupancy_states(ratio);
         if (analysis.frame_index < 10) { S0 += 0.1 * S; }
         else { printf("ratio = %lf\n", S / S0); }
 

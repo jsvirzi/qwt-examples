@@ -6,6 +6,8 @@
 #include <TCanvas.h>
 #include <TGraph.h>
 #include <TGraphErrors.h>
+#include <TLatex.h>
+#include <TLine.h>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -18,7 +20,7 @@ public:
     Analysis(const char *filename);
     ~Analysis();
     double image_entropy(void);
-    void image_occupancy_states(void);
+    void image_occupancy_states(double ratio);
     bool next_image();
     bool stop_image();
     bool image_health;
