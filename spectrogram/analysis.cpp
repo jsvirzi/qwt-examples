@@ -46,19 +46,16 @@ double Analysis::image_entropy(void) {
 
 void Analysis::image_occupancy_states(void)
 {
+    unsigned int i;
     uint8_t *b = gray_mat.data;
     image_width = gray_mat.cols;
     image_height = gray_mat.rows;
     unsigned int rows = image_height;
     unsigned int cols = image_width;
     if (h_occupancy != NULL) { delete h_occupancy; }
-    if (g_occupancy != NULL) { delete g_occupancy; }
-    if (g_occupancy_integral != NULL) { delete g_occupancy_integral; }
-
-    double occupancy[256], occupancy_integral[256], integral = 0.0;
 
     h_occupancy = new TH1I("occupancy", "occupancy", 256, 0, 256);
-    for (int row = 0; row < rows; ++row) {
+    for (unsigned int row = 0; row < rows; ++row) {
         uint8_t *p = &b[row * cols];
         for (int col = 0; col < cols; ++col) {
             uint8_t occ = *p++;
@@ -66,19 +63,28 @@ void Analysis::image_occupancy_states(void)
         }
     }
 
-    if (g_occupancy == NULL) { delete g_occupancy; }
-    g_occupancy = new TGraphErrors(max_occupancy, occ_axis, occupancy);
-    for (unsigned int i = 0; i < 256; ++i) {
+    double integral = 0.0;
+    for (i = 0; i < 256; ++i) {
         unsigned int bin = i + 1;
         occupancy[i] = h_occupancy->GetBinContent(bin);
         occupancy_integral[i] = integral + occupancy[i];
+        integral = occupancy_integral[i];
+        g_occupancy->SetPoint(i, occ_axis[i], occupancy[i]);
+        g_occupancy_integral->SetPoint(i, occ_axis[i], occupancy_integral[i] / 256.0);
     }
+    occupancy[i] = 0.0;
+    occupancy_integral[i] = integral + occupancy[i];
+//    g_occupancy->SetPoint(i, occ_axis[i], occupancy[i]);
+//    g_occupancy_integral->SetPoint(i, occ_axis[i], occupancy_integral[i]);
+
+//    printf("zippedee-doo-dah\n");
+//    printf("hickedee-doo-dah\n");
 
 #if 1
     canvas->cd();
     h_occupancy->Draw("hist");
-//    g_occupancy->Draw("L");
-//    g_occupancy_integral->Draw("L");
+    g_occupancy->Draw("L");
+    g_occupancy_integral->Draw("L");
     canvas->Draw();
     canvas->Update();
 //    canvas->WaitPrimitive();
@@ -124,12 +130,6 @@ Analysis::Analysis(const char *filename) {
 
     cv::namedWindow("gray");
 
-    h_occupancy = NULL;
-    g_occupancy = NULL;
-    g_occupancy_integral = NULL;
-    max_occupancy = 256;
-
-    for (i = 0; i < 256; ++i) { occ_axis[i] = (double) i; }
 
     const double c = 0.5 * log(2.0 * M_PI);
 
@@ -155,6 +155,19 @@ Analysis::Analysis(const char *filename) {
     char **argv = &arg1; // = { "this_main_app" };
     theApp = new TApplication("theApp", &argc, argv);
     canvas = new TCanvas("canvas", "canvas", 1600, 1200);
+    for (i = 0; i <= 256; ++i) { occ_axis[i] = (double) i; }
+    max_occupancy = 256;
+    occupancy = new double[max_occupancy + 1];
+    occupancy_integral = new double[max_occupancy + 1];
+    g_occupancy = new TGraphErrors(max_occupancy, occ_axis, occupancy);
+    g_occupancy_integral = new TGraphErrors(max_occupancy, occ_axis, occupancy_integral);
+    TGraphErrors *g = g_occupancy;
+    g->SetLineColor(kRed);
+    g->SetLineWidth(3);
+    g = g_occupancy_integral;
+    g->SetLineColor(kBlue);
+    g->SetLineWidth(3);
+    h_occupancy = NULL;
 
     entropy = new double[max_history_size];
     data_phase = 0;

@@ -28,12 +28,14 @@ public:
     TCanvas *canvas;
     TApplication *theApp;
     double *entropy;
+    double *occupancy;
+    double *occupancy_integral;
     unsigned int data_phase;
     unsigned int history_length;
     unsigned int history_mask;
     void updateData(double entropy);
     unsigned int max_occupancy;
-    double occ_axis[256];
+    double occ_axis[256 + 1];
     cv::VideoCapture video_capture;
     cv::Mat frame_mat;
     cv::Mat gray_mat;

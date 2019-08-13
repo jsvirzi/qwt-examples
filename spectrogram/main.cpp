@@ -118,6 +118,7 @@ int main( int argc, char **argv )
     double logr = jsvHistogram.image_entropy(image_buff, 1280, 720);
 
     printf("image entropy = %lf\n", logr);
+#endif
 
     QApplication a( argc, argv );
     a.setStyle( "Windows" );
@@ -127,6 +128,5 @@ int main( int argc, char **argv )
     mainWindow.show();
 
     return a.exec();
-#endif
 
 }
