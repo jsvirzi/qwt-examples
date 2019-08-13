@@ -14,19 +14,14 @@ CONFIG += qwt
 
 TARGET = spectrogram
 
-HEADERS = \
-     plot.h \
-     variables.h
+HEADERS = plot.h variables.h analysis.h
 
 INCLUDEPATH += /Users/jsvirzi/utils/root/include
 INCLUDEPATH += /usr/local/include/opencv
 INCLUDEPATH += /usr/local/include
 INCLUDEPATH += /home/jsvirzi/utils/qwt-6.1.4/src
 
-SOURCES = \
-    plot.cpp \
-    main.cpp \
-    variables.cpp
+SOURCES = plot.cpp main.cpp variables.cpp analysis.cpp
 
 # /home/jsvirzi/projects/qwt-examples
 

@@ -18,6 +18,7 @@
 #include "math.h"
 
 #include "variables.h"
+#include "analysis.h"
 
 class MainWindow: public QMainWindow
 {
@@ -94,38 +95,17 @@ int main( int argc, char **argv )
     int fd = open("//Users/jsvirzi/Downloads/600_1280x720.nv21", O_RDONLY, S_IREAD);
     size_t n_bytes = read(fd, image_buff, sizeof(image_buff));
 
+    Analysis analysis("/home/jsvirzi/projects/0_1565280852557.mp4");
+
+    while (analysis.next_image()) { ; }
+
+    analysis.stop_image();
+
     JsvHistogram jsvHistogram(0.0, 1.0, 0.0, 1.0, (unsigned int) 0);
 
     double logr = jsvHistogram.image_entropy(image_buff, 1280, 720);
 
     printf("image entropy = %lf\n", logr);
-
-    return 0;
-
-#if 0
-    const double c = 0.5 * log(2.0 * M_PI);
-
-    static double log_factorial_lut[256];
-
-    int i = 0;
-    log_factorial_lut[i++] = log(1.0);
-    log_factorial_lut[i++] = log(2 * 1.0);
-    log_factorial_lut[i++] = log(3 * 2 * 1.0);
-    log_factorial_lut[i++] = log(4 * 3 * 2 * 1.0);
-    log_factorial_lut[i++] = log(5 * 4 * 3 * 2 * 1.0);
-    log_factorial_lut[i++] = log(6 * 5 * 4 * 3 * 2 * 1.0);
-    log_factorial_lut[i++] = log(7 * 6 * 5 * 4 * 3 * 2 * 1.0);
-    log_factorial_lut[i++] = log(8 * 7 * 6 * 5 * 4 * 3 * 2 * 1.0);
-    log_factorial_lut[i++] = log(9 * 8 * 7 * 6 * 5 * 4 * 3 * 2 * 1.0);
-    for (; i < 256; ++i) {
-        log_factorial_lut[i] = c + 0.5 * log(i) + i * log((double) i);
-    }
-
-    printf("log facs = %lf vs %lf\n", log_factorial_lut[8], c + 0.5 * log(9.0) + 9.0 * log(9.0) - 9.0);
-
-#endif
-
-    return 0;
 
     QApplication a( argc, argv );
     a.setStyle( "Windows" );
