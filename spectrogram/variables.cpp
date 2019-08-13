@@ -6,6 +6,10 @@
 
 #include <math.h>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/opencv.hpp>
+
 #include "variables.h"
 
 static double log_factorial_lut[256];
@@ -35,7 +39,7 @@ double JsvHistogram::image_entropy(uint8_t *b, int width, int height) {
 
 void JsvHistogram::image_occupancy_states(uint8_t *b, int width, int height) {
     if (h_occupancy == NULL) { delete h_occupancy; }
-    double occupancy[256], occupancy_integral[256], integral;
+    double occupancy[256], occupancy_integral[256], integral = 0.0;
 
     h_occupancy = new TH1I("occupancy", "occupancy", 256, 0, 256);
     for (int row = 0; row < height; ++row) {
@@ -48,7 +52,7 @@ void JsvHistogram::image_occupancy_states(uint8_t *b, int width, int height) {
 
     if (g_occupancy == NULL) { delete g_occupancy; }
     g_occupancy = new TGraphErrors(max_occupancy, occ_axis, occupancy);
-    for (unsigned int i = 0, integral = 0.0; i < 256; ++i) {
+    for (unsigned int i = 0; i < 256; ++i) {
         unsigned int bin = i + 1;
         occupancy[i] = h_occupancy->GetBinContent(bin);
         occupancy_integral[i] = integral + occupancy[i];
@@ -58,6 +62,28 @@ void JsvHistogram::image_occupancy_states(uint8_t *b, int width, int height) {
 JsvHistogram::JsvHistogram(double x_min, double x_max, double y_min, double y_max, unsigned int history) {
 
     int i = 0;
+
+    int frame_index = 0;
+    printf("opened video\n");
+    cv::VideoCapture video_capture("/home/jsvirzi/projects/0_1565280852557.mp4");
+    if (video_capture.isOpened()) {
+        printf("opening video\n");
+    } else {
+        printf("failed to open file\n");
+        return;
+    }
+
+    while (1) {
+        cv::Mat frame;
+        printf("capture frame %d\n", frame_index++);
+        video_capture >> frame;
+        if (frame.empty()) { printf("we're done\n"); break; }
+        imshow("Frame", frame);
+        char ch = (char) cv::waitKey(10);
+        if (ch == 0x1b) { break; }
+    }
+
+    video_capture.release();
 
     h_occupancy = NULL;
     g_occupancy = NULL;
@@ -121,6 +147,7 @@ JsvHistogram::~JsvHistogram() {
     if (h_occupancy != NULL) { delete h_occupancy; h_occupancy = NULL; }
     if (g_occupancy != NULL) { delete g_occupancy; g_occupancy = NULL; }
     if (g_occupancy_integral != NULL) { delete g_occupancy_integral; g_occupancy_integral = NULL; }
+    if (video_capture != NULL) { delete video_capture; video_capture = NULL; }
 }
 
 void JsvHistogram::updateDataPhase(double entropy_value) {

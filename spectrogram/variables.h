@@ -7,6 +7,10 @@
 #include <TGraph.h>
 #include <TGraphErrors.h>
 
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/opencv.hpp>
+
 #include <stdint.h>
 
 class JsvHistogram {
@@ -27,6 +31,7 @@ public:
     void updateDataPhase(double entropy);
     unsigned int max_occupancy;
     double occ_axis[256];
+    cv::VideoCapture *video_capture;
 };
 
 #endif
